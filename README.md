@@ -2,7 +2,7 @@
 
 Sistema web responsivo para registro de ponto eletrônico usando apenas **HTML, CSS, Bootstrap e JavaScript puro**.
 
-**⚠️ IMPORTANTE**: Este sistema armazena dados APENAS no Google Planilhas. A configuração do Google Apps Script é OBRIGATÓRIA.
+**IMPORTANTE**: Este sistema armazena dados APENAS no Google Planilhas. A configuração do Google Apps Script é OBRIGATÓRIA.
 
 ## 📁 Estrutura de Arquivos
 
