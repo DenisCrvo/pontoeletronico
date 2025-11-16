@@ -1,0 +1,129 @@
+// ============================================
+// CÓDIGO COMPLETO DO GOOGLE APPS SCRIPT
+// ============================================
+// Cole este código no Google Apps Script
+// (Extensões → Apps Script)
+// ============================================
+
+const SHEET_NAME = 'Registros';
+
+// Função para receber dados via GET (carregar registros)
+function doGet(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    
+    if (!sheet) {
+      throw new Error('Aba "Registros" não encontrada. Verifique o nome da aba!');
+    }
+    
+    const data = sheet.getDataRange().getValues();
+    
+    // Verificar se tem dados
+    if (data.length <= 1) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ 
+          success: true, 
+          data: [],
+          message: 'Nenhum registro encontrado'
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    
+    // Remover cabeçalho
+    const headers = data[0];
+    const records = data.slice(1);
+    
+    // Converter para JSON
+    const jsonData = records.map(row => ({
+      timestamp: row[0],
+      date: row[1],
+      entryTime: row[2] || null,
+      breakStartTime: row[3] || null,
+      breakEndTime: row[4] || null,
+      exitTime: row[5] || null,
+      type: row[6] || 'automatic'
+    }));
+    
+    // Filtrar registros do mês atual
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const monthRecords = jsonData.filter(record => {
+      if (!record.timestamp) return false;
+      const recordDate = new Date(record.timestamp);
+      return recordDate.getMonth() === currentMonth && 
+             recordDate.getFullYear() === currentYear;
+    });
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: true, 
+        data: monthRecords,
+        total: monthRecords.length 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: false, 
+        error: error.toString() 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// Função para receber dados via POST (salvar registros)
+function doPost(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+    
+    if (!sheet) {
+      throw new Error('Aba "Registros" não encontrada. Renomeie a aba para "Registros"!');
+    }
+    
+    // Receber dados do formulário
+    const params = e.parameter;
+    
+    // Validar dados obrigatórios
+    if (!params.date) {
+      throw new Error('Data é obrigatória');
+    }
+    
+    // Preparar linha para inserção
+    const timestamp = new Date();
+    const row = [
+      timestamp,
+      params.date,
+      params.entryTime || '',
+      params.breakStartTime || '',
+      params.breakEndTime || '',
+      params.exitTime || '',
+      params.type || 'automatic'
+    ];
+    
+    // Adicionar nova linha
+    sheet.appendRow(row);
+    
+    // Log para debug
+    Logger.log('Registro salvo: ' + JSON.stringify(row));
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: true, 
+        message: 'Registro salvo com sucesso',
+        timestamp: timestamp.toISOString()
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+      
+  } catch (error) {
+    Logger.log('Erro ao salvar: ' + error.toString());
+    
+    return ContentService
+      .createTextOutput(JSON.stringify({ 
+        success: false, 
+        error: error.toString() 
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}

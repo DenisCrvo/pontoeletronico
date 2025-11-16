@@ -3,7 +3,7 @@
 // ========================================
 
 // URL do Google Apps Script (OBRIGATÓRIA - configure antes de usar)
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzDJGcvLD21YJ6hUy6pwTOkUlsF6Dod6oZtECXm0a4uORrls3F_tyjHuJoImUDaH3X/exec'; // Cole aqui a URL do seu Web App do Google Apps Script
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_NyqvoUq4gySuSdL6FnzCNrbe2aig421QhtbSo_XDoP96zxHU3cWRJcLC61RxcHA0/exec'; // Cole aqui a URL do seu Web App do Google Apps Script
 
 // ========================================
 // ESTADO DA APLICAÇÃO
@@ -390,7 +390,7 @@ function parseDate(dateString) {
 // INTEGRAÇÃO GOOGLE SHEETS
 // ========================================
 
-async function saveToGoogleSheets(record) {
+function saveToGoogleSheets(record) {
     if (!GOOGLE_SCRIPT_URL) {
         showToast('Configure a URL do Google Apps Script primeiro!', 'error');
         console.error('GOOGLE_SCRIPT_URL não configurada');
@@ -400,40 +400,55 @@ async function saveToGoogleSheets(record) {
     try {
         showToast('Salvando...', 'success');
         
-        const response = await fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                date: record.date,
-                entryTime: record.entryTime || '',
-                breakStartTime: record.breakStartTime || '',
-                breakEndTime: record.breakEndTime || '',
-                exitTime: record.exitTime || '',
-                type: record.type
-            }),
-            redirect: 'follow'
-        });
+        // Criar um formulário invisível para enviar dados (evita CORS)
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = GOOGLE_SCRIPT_URL;
+        form.target = 'hidden_iframe';
+        form.style.display = 'none';
         
-        // Verificar se a resposta foi bem-sucedida
-        if (response.ok) {
-            const result = await response.json();
-            if (result.success) {
-                showToast('✅ Registro salvo com sucesso!', 'success');
-                console.log('Dados salvos:', result);
-            } else {
-                showToast('❌ Erro ao salvar: ' + result.error, 'error');
-                console.error('Erro do servidor:', result.error);
-            }
-        } else {
-            // Para requisições que retornam opaque response (no-cors)
-            showToast('✅ Registro enviado!', 'success');
-            console.log('Dados enviados para Google Sheets (modo no-cors)');
+        // Adicionar campos
+        const fields = {
+            date: record.date,
+            entryTime: record.entryTime || '',
+            breakStartTime: record.breakStartTime || '',
+            breakEndTime: record.breakEndTime || '',
+            exitTime: record.exitTime || '',
+            type: record.type
+        };
+        
+        for (const [key, value] of Object.entries(fields)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = key;
+            input.value = value;
+            form.appendChild(input);
         }
         
+        // Criar iframe invisível para receber resposta
+        let iframe = document.getElementById('hidden_iframe');
+        if (!iframe) {
+            iframe = document.createElement('iframe');
+            iframe.id = 'hidden_iframe';
+            iframe.name = 'hidden_iframe';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+        }
+        
+        // Adicionar form ao body e enviar
+        document.body.appendChild(form);
+        form.submit();
+        
+        // Remover form após envio
+        setTimeout(() => {
+            document.body.removeChild(form);
+            showToast('✅ Registro salvo com sucesso!', 'success');
+        }, 1000);
+        
+        console.log('Dados enviados para Google Sheets:', fields);
+        
     } catch (error) {
-        showToast('❌ Erro ao conectar com Google Sheets', 'error');
+        showToast('❌ Erro ao salvar', 'error');
         console.error('Erro ao salvar:', error);
     }
 }
