@@ -1,0 +1,232 @@
+/* Variáveis de Cores */
+:root {
+    --primary-color: #4F7CFF;
+    --success-color: #4CAF50;
+    --danger-color: #EF5350;
+    --warning-color: #FFA726;
+    --info-color: #29B6F6;
+    --light-bg: #F8F9FA;
+    --border-color: #DEE2E6;
+}
+
+/* Reset e Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--light-bg);
+    min-height: 100vh;
+}
+
+/* Header */
+header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #3461E0 100%);
+}
+
+/* Cards */
+.card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-header {
+    border-bottom: 1px solid var(--border-color);
+    border-radius: 12px 12px 0 0 !important;
+    padding: 1rem 1.25rem;
+}
+
+/* Botões */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-lg {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #3461E0 100%);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #3461E0 0%, #2451D0 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(79, 124, 255, 0.3);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, var(--success-color) 0%, #45A049 100%);
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #45A049 0%, #3D8B40 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, var(--danger-color) 0%, #E53935 100%);
+}
+
+.btn-danger:hover {
+    background: linear-gradient(135deg, #E53935 0%, #C62828 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(239, 83, 80, 0.3);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Inputs */
+.form-control {
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    padding: 0.625rem 0.875rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(79, 124, 255, 0.15);
+}
+
+.form-control-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+}
+
+/* Time Record Items */
+.time-record-item {
+    background-color: #F0F4FF;
+    border-radius: 8px;
+    padding: 0.75rem;
+    text-align: center;
+}
+
+.time-record-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    margin-bottom: 0.25rem;
+}
+
+.time-record-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+    color: #212529;
+}
+
+/* Month Records */
+.month-record-card {
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    background-color: white;
+    transition: all 0.2s;
+}
+
+.month-record-card:hover {
+    background-color: #F8F9FA;
+    border-color: var(--primary-color);
+    transform: translateX(4px);
+}
+
+.record-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.record-badge-auto {
+    background-color: #E3F2FD;
+    color: #1976D2;
+}
+
+.record-badge-manual {
+    background-color: #FFF3E0;
+    color: #F57C00;
+}
+
+/* Toast */
+.toast {
+    background-color: #28a745;
+    color: white;
+}
+
+.toast.error {
+    background-color: #dc3545;
+}
+
+/* Relógio */
+#currentTime {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+    .btn-lg {
+        padding: 0.75rem 1.25rem;
+        font-size: 0.95rem;
+    }
+    
+    .display-6 {
+        font-size: 2rem;
+    }
+    
+    .time-record-value {
+        font-size: 1.1rem;
+    }
+}
+
+/* Animações */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+/* Scrollbar customizada */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
