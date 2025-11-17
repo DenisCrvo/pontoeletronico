@@ -387,7 +387,7 @@ function parseDate(dateString) {
 }
 
 // ========================================
-// INTEGRAÇÃO GOOGLE SHEETS
+// INTEGRAÇÃO GOOGLE SHEETS - JSONP
 // ========================================
 
 function saveToGoogleSheets(record) {
@@ -400,52 +400,38 @@ function saveToGoogleSheets(record) {
     try {
         showToast('Salvando...', 'success');
         
-        // Criar um formulário invisível para enviar dados (evita CORS)
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = GOOGLE_SCRIPT_URL;
-        form.target = 'hidden_iframe';
-        form.style.display = 'none';
-        
-        // Adicionar campos
-        const fields = {
+        // Construir URL com parâmetros
+        const params = new URLSearchParams({
+            action: 'save',
             date: record.date,
             entryTime: record.entryTime || '',
             breakStartTime: record.breakStartTime || '',
             breakEndTime: record.breakEndTime || '',
             exitTime: record.exitTime || '',
             type: record.type
+        });
+        
+        const url = `${GOOGLE_SCRIPT_URL}?${params.toString()}`;
+        
+        // Criar script tag para JSONP
+        const script = document.createElement('script');
+        script.src = url;
+        
+        // Callback de sucesso
+        window.handleSaveResponse = function(response) {
+            if (response.success) {
+                showToast('✅ Registro salvo com sucesso!', 'success');
+                console.log('Dados salvos:', response);
+            } else {
+                showToast('❌ Erro ao salvar: ' + response.error, 'error');
+                console.error('Erro do servidor:', response.error);
+            }
+            document.body.removeChild(script);
         };
         
-        for (const [key, value] of Object.entries(fields)) {
-            const input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = key;
-            input.value = value;
-            form.appendChild(input);
-        }
+        document.body.appendChild(script);
         
-        // Criar iframe invisível para receber resposta
-        let iframe = document.getElementById('hidden_iframe');
-        if (!iframe) {
-            iframe = document.createElement('iframe');
-            iframe.id = 'hidden_iframe';
-            iframe.name = 'hidden_iframe';
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-        }
-        
-        // Adicionar form ao body e enviar
-        document.body.appendChild(form);
-        form.submit();
-        
-        // Remover form após envio
-        setTimeout(() => {
-            document.body.removeChild(form);
-            showToast('✅ Registro salvo com sucesso!', 'success');
-        }, 1000);
-        
-        console.log('Dados enviados para Google Sheets:', fields);
+        console.log('Dados enviados para Google Sheets:', record);
         
     } catch (error) {
         showToast('❌ Erro ao salvar', 'error');
@@ -453,7 +439,7 @@ function saveToGoogleSheets(record) {
     }
 }
 
-async function loadFromGoogleSheets() {
+function loadFromGoogleSheets() {
     if (!GOOGLE_SCRIPT_URL) {
         console.warn('GOOGLE_SCRIPT_URL não configurada');
         return;
@@ -462,49 +448,51 @@ async function loadFromGoogleSheets() {
     try {
         showToast('Carregando dados...', 'success');
         
-        const response = await fetch(GOOGLE_SCRIPT_URL + '?action=get', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
+        // Criar script tag para JSONP
+        const script = document.createElement('script');
+        const callbackName = 'handleLoadResponse_' + Date.now();
         
-        if (!response.ok) {
-            throw new Error('Erro na resposta do servidor');
-        }
-        
-        const result = await response.json();
-        console.log('Dados recebidos:', result);
-        
-        if (result.success && result.data) {
-            // Processar dados recebidos
-            monthRecords = result.data.map(item => ({
-                id: item.timestamp || Date.now().toString(),
-                date: item.date,
-                entryTime: item.entryTime || null,
-                breakStartTime: item.breakStartTime || null,
-                breakEndTime: item.breakEndTime || null,
-                exitTime: item.exitTime || null,
-                type: item.type || 'automatic'
-            }));
+        // Definir callback global
+        window[callbackName] = function(result) {
+            console.log('Dados recebidos:', result);
             
-            // Verificar se existe registro de hoje
-            const today = new Date().toLocaleDateString('pt-BR');
-            const todayData = monthRecords.find(r => r.date === today);
-            
-            if (todayData) {
-                todayRecord = todayData;
+            if (result.success && result.data) {
+                // Processar dados recebidos
+                monthRecords = result.data.map(item => ({
+                    id: item.timestamp || Date.now().toString(),
+                    date: item.date,
+                    entryTime: item.entryTime || null,
+                    breakStartTime: item.breakStartTime || null,
+                    breakEndTime: item.breakEndTime || null,
+                    exitTime: item.exitTime || null,
+                    type: item.type || 'automatic'
+                }));
+                
+                // Verificar se existe registro de hoje
+                const today = new Date().toLocaleDateString('pt-BR');
+                const todayData = monthRecords.find(r => r.date === today);
+                
+                if (todayData) {
+                    todayRecord = todayData;
+                } else {
+                    todayRecord = null;
+                }
+                
+                updateUI();
+                showToast('✅ Dados carregados!', 'success');
+                console.log('Total de registros:', monthRecords.length);
             } else {
-                todayRecord = null;
+                showToast('⚠️ Nenhum dado encontrado', 'error');
+                console.warn('Resposta sem dados:', result);
             }
             
-            updateUI();
-            showToast('✅ Dados carregados!', 'success');
-            console.log('Total de registros:', monthRecords.length);
-        } else {
-            showToast('⚠️ Nenhum dado encontrado', 'error');
-            console.warn('Resposta sem dados:', result);
-        }
+            // Limpar
+            document.body.removeChild(script);
+            delete window[callbackName];
+        };
+        
+        script.src = `${GOOGLE_SCRIPT_URL}?action=get&callback=${callbackName}`;
+        document.body.appendChild(script);
         
     } catch (error) {
         showToast('❌ Erro ao carregar dados', 'error');
