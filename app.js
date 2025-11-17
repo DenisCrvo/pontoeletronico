@@ -10,7 +10,6 @@ const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOQ5EcTJeonI
 // ========================================
 
 let todayRecord = null;
-let monthRecords = [];
 
 // ========================================
 // INICIALIZAÇÃO
@@ -55,10 +54,7 @@ function updateClock() {
     document.getElementById('currentTime').textContent = 
         now.toLocaleTimeString('pt-BR');
     
-    // Atualizar mês atual
-    const monthOptions = { month: 'long', year: 'numeric' };
-    document.getElementById('currentMonth').textContent = 
-        now.toLocaleDateString('pt-BR', monthOptions);
+
 }
 
 // ========================================
@@ -179,7 +175,6 @@ function handleManualSubmit(event) {
 function updateUI() {
     updateButtons();
     updateTodayRecord();
-    updateMonthRecords();
 }
 
 function updateButtons() {
@@ -254,72 +249,7 @@ function createTimeRecordItem(label, time) {
     `;
 }
 
-function updateMonthRecords() {
-    const container = document.getElementById('monthRecordsList');
-    
-    if (monthRecords.length === 0) {
-        container.innerHTML = `
-            <div class="text-center py-5 text-muted">
-                <i class="bi bi-calendar3 fs-1 opacity-50"></i>
-                <p class="mt-3">Nenhum registro encontrado neste mês</p>
-            </div>
-        `;
-        return;
-    }
-    
-    let html = '';
-    monthRecords.forEach(record => {
-        html += createMonthRecordCard(record);
-    });
-    
-    container.innerHTML = html;
-}
 
-function createMonthRecordCard(record) {
-    const badgeClass = record.type === 'manual' ? 'record-badge-manual' : 'record-badge-auto';
-    const badgeText = record.type === 'manual' ? 'Manual' : 'Automático';
-    const workHours = calculateWorkHours(record);
-    
-    return `
-        <div class="month-record-card fade-in">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                    <h6 class="mb-1">${record.date}</h6>
-                    <span class="record-badge ${badgeClass}">${badgeText}</span>
-                </div>
-                <div class="text-end">
-                    <div class="fw-bold text-primary">${workHours}</div>
-                </div>
-            </div>
-            <div class="row g-2 mt-2">
-                ${record.entryTime ? `
-                    <div class="col-6 col-md-3">
-                        <small class="text-muted d-block">Entrada</small>
-                        <span class="fw-semibold">${record.entryTime}</span>
-                    </div>
-                ` : ''}
-                ${record.breakStartTime ? `
-                    <div class="col-6 col-md-3">
-                        <small class="text-muted d-block">Intervalo</small>
-                        <span class="fw-semibold">${record.breakStartTime}</span>
-                    </div>
-                ` : ''}
-                ${record.breakEndTime ? `
-                    <div class="col-6 col-md-3">
-                        <small class="text-muted d-block">Retorno</small>
-                        <span class="fw-semibold">${record.breakEndTime}</span>
-                    </div>
-                ` : ''}
-                ${record.exitTime ? `
-                    <div class="col-6 col-md-3">
-                        <small class="text-muted d-block">Saída</small>
-                        <span class="fw-semibold">${record.exitTime}</span>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-}
 
 // ========================================
 // CÁLCULOS
@@ -457,35 +387,30 @@ function loadFromGoogleSheets() {
             console.log('Dados recebidos:', result);
             
             if (result.success && result.data) {
-                // Processar dados recebidos
-                monthRecords = result.data.map(item => ({
-                    id: item.timestamp || Date.now().toString(),
-                    date: item.date,
-                    entryTime: item.entryTime || null,
-                    breakStartTime: item.breakStartTime || null,
-                    breakEndTime: item.breakEndTime || null,
-                    exitTime: item.exitTime || null,
-                    type: item.type || 'automatic'
-                }));
-                
                 // Verificar se existe registro de hoje
                 const today = new Date().toLocaleDateString('pt-BR');
-                const todayData = monthRecords.find(r => r.date === today);
+                const todayData = result.data.find(r => r.date === today);
                 
                 if (todayData) {
-                    todayRecord = todayData;
+                    todayRecord = {
+                        id: todayData.timestamp || Date.now().toString(),
+                        date: todayData.date,
+                        entryTime: todayData.entryTime || null,
+                        breakStartTime: todayData.breakStartTime || null,
+                        breakEndTime: todayData.breakEndTime || null,
+                        exitTime: todayData.exitTime || null,
+                        type: todayData.type || 'automatic'
+                    };
                 } else {
                     todayRecord = null;
                 }
                 
                 updateUI();
                 showToast('✅ Dados carregados!', 'success');
-                console.log('Total de registros:', monthRecords.length);
             } else {
                 showToast('⚠️ Nenhum dado encontrado', 'error');
                 console.warn('Resposta sem dados:', result);
-            }
-            
+            }            
             // Limpar
             document.body.removeChild(script);
             delete window[callbackName];
