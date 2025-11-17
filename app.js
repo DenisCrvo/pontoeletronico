@@ -3,7 +3,7 @@
 // ========================================
 
 // URL do Google Apps Script (OBRIGATÓRIA - configure antes de usar)
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby_NyqvoUq4gySuSdL6FnzCNrbe2aig421QhtbSo_XDoP96zxHU3cWRJcLC61RxcHA0/exec'; // Cole aqui a URL do seu Web App do Google Apps Script
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwasgAgTaqGLE9GwBggZCQLrwVdnT-ct0ZUPCduyn1AQPxzpGG4fcchLZqNMjXIoWq0/exec'; // Cole aqui a URL do seu Web App do Google Apps Script
 
 // ========================================
 // ESTADO DA APLICAÇÃO
